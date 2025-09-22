@@ -1,6 +1,6 @@
 name: RPGItems
 version: 1.0.0
-main: Moon2.rPGWeapon.Heatblade
+main: Moon2.rPGWeapon.Main
 api-version: 1.16
 authors:
   - Mooooonrabbbit

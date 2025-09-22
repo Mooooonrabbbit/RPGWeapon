@@ -1,8 +1,6 @@
 package Moon2.rPGWeapon;
 
 import org.bukkit.*;
-import org.bukkit.command.Command;
-import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,13 +13,12 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.UUID;
 
-import static Moon2.rPGWeapon.Heatblade.plugin;
+import static Moon2.rPGWeapon.Main.plugin;
 
 public class CorruptedTrident implements Listener {
 

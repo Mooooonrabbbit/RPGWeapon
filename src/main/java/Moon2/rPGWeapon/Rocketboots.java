@@ -1,14 +1,14 @@
 package Moon2.rPGWeapon;
 
-import com.destroystokyo.paper.event.player.PlayerJumpEvent;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInputEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerToggleSneakEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -18,7 +18,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.UUID;
 
-import static Moon2.rPGWeapon.Heatblade.plugin;
+import static Moon2.rPGWeapon.Main.plugin;
 
 public class Rocketboots implements Listener {
 
@@ -29,7 +29,6 @@ public class Rocketboots implements Listener {
     public static ItemStack getRocketBoots() {
         ItemStack boots = new ItemStack(Material.CHAINMAIL_BOOTS);
         ItemMeta meta = boots.getItemMeta();
-
         // 设置名称和描述
         meta.setDisplayName(ChatColor.GOLD + "火箭靴");
         meta.setLore(Arrays.asList(
@@ -37,7 +36,6 @@ public class Rocketboots implements Listener {
                 ChatColor.GRAY + "下蹲激活火箭推进",
                 ChatColor.GRAY + "减少摔落伤害，增加跳跃高度"
         ));
-
         // 设置自定义模型数据
         meta.setCustomModelData(1001);
 
@@ -58,7 +56,7 @@ public class Rocketboots implements Listener {
 
     // 处理下蹲事件
     @EventHandler
-    public void onPlayerSneak(PlayerInputEvent event) {
+    public void onPlayerJump(PlayerInputEvent event) {
         Player player = event.getPlayer();
         ItemStack boots = player.getInventory().getBoots();
 
@@ -66,7 +64,6 @@ public class Rocketboots implements Listener {
         if (boots == null || !isRocketBoots(boots)) {
             return;
         }
-
         // 检查是否开始下蹲
         if (event.getInput().isJump()) {
             // 激活火箭靴
@@ -116,15 +113,12 @@ public class Rocketboots implements Listener {
                         player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.2f);
                     }
 
-                    // 生成粒子效果
-                    Location loc = player.getLocation().add(0, 0.1, 0);
-                    player.getWorld().spawnParticle(Particle.LARGE_SMOKE, loc, 10, 0.2, 0, 0.2, 0.02);
-                    player.getWorld().spawnParticle(Particle.FLAME, loc, 5, 0.2, 0, 0.2, 0.01);
                 }
             }.runTaskTimer(plugin, 0, 20).getTaskId(); // 每20ticks(1秒)执行一次
 
             durabilityTask.put(player.getUniqueId(), taskId);
-        } else {
+        } else if(rocketActive.getOrDefault(player.getUniqueId(), false)) {
+
             // 停止下蹲，关闭火箭靴
             rocketActive.put(player.getUniqueId(), false);
 
@@ -143,9 +137,6 @@ public class Rocketboots implements Listener {
     @EventHandler
     public void onPlayerMove(PlayerMoveEvent event) {
         Player player = event.getPlayer();
-
-
-
         // 检查是否穿着火箭靴并且激活
         if (!rocketActive.getOrDefault(player.getUniqueId(), false)) {
             return;
@@ -156,22 +147,19 @@ public class Rocketboots implements Listener {
             rocketActive.put(player.getUniqueId(), false);
             return;
         }
+        Vector currentVel = player.getVelocity();
+        float yaw = player.getYaw();
 
         // 获取玩家当前的 velocity 向量
-        Vector currentVel = player.getVelocity();
-
-        double newY = currentVel.getY() + 0.2;
-        if (newY > 1.0) { // 设置最大Y轴速度
-            newY = 1.0;
-        }
-        Vector newVel = new Vector(currentVel.getX(), newY, currentVel.getZ());
+        Vector newVel = new Vector(currentVel.getX(), Math.max(1.0,currentVel.getY() + 0.2), currentVel.getZ());
 
         // 将新的速度向量应用给玩家
         player.setVelocity(newVel);
 
-        // 持续生成粒子效果
+        // 生成粒子效果
         Location loc = player.getLocation().add(0, 0.1, 0);
-        player.getWorld().spawnParticle(Particle.SMOKE, loc, 3, 0.1, 0, 0.1, 0.01);
+        player.getWorld().spawnParticle(Particle.LARGE_SMOKE, loc, 10, 0.2, 0, 0.2, 0.02);
+        player.getWorld().spawnParticle(Particle.FLAME, loc, 5, 0.2, 0, 0.2, 0.01);
 
         // 每隔一段时间播放推进音效
         if (player.getTicksLived() % 10 == 0) {
