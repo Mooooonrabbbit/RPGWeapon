@@ -1,0 +1,18 @@
+name: RPGItems
+version: 1.0.0
+main: Moon2.rPGWeapon.Heatblade
+api-version: 1.16
+authors:
+  - Mooooonrabbbit
+description: 添加自定义武器
+
+commands:
+  heatblade:
+    description: 获取炽热之剑
+    usage: /heatblade
+  corruptedtrident:
+    description: 获取腐蚀的三叉戟
+    usage: /corruptedtrident
+  rocketboots:
+    description: 获取火箭靴
+    usage: /rocketboot
