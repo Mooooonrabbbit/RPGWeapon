@@ -1,9 +1,10 @@
 package Moon2.rPGWeapon;
 
 import org.bukkit.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.player.PlayerInputEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
@@ -11,6 +12,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,10 +20,60 @@ import java.util.UUID;
 
 import static Moon2.rPGWeapon.Main.plugin;
 
-public class Rocketboots implements Listener {
+public class Rocketboots implements Weapon {
 
     private final HashMap<UUID, Boolean> rocketActive = new HashMap<>();
     public final HashMap<UUID, Integer> durabilityTask = new HashMap<>();
+
+
+    @Override
+    public void onEnable() {
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        plugin.getCommand("rocketboot").setExecutor(this);
+    }
+
+    @Override
+    public void onDisable() {
+        // 取消所有正在运行的任务
+        for (Integer taskId : durabilityTask.values()) {
+            if (taskId != null) {
+                plugin.getServer().getScheduler().cancelTask(taskId);
+            }
+        }
+
+    }
+
+    @Override
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
+        Player player = (Player) sender;
+
+        if (!player.hasPermission("rocketboots.get")) {
+            player.sendMessage(ChatColor.RED + "你没有权限使用这个命令!");
+            return true;
+        }
+
+        ItemStack rocketBoots = getRocketBoots();
+
+        // 检查玩家是否已经穿戴了靴子
+        if (player.getInventory().getBoots() != null) {
+            // 如果已经穿了靴子，尝试添加到库存
+            HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(rocketBoots);
+            if (!leftover.isEmpty()) {
+                player.getWorld().dropItemNaturally(player.getLocation(), rocketBoots);
+                player.sendMessage(ChatColor.YELLOW + "你的库存已满，火箭靴已掉落在地面上!");
+            } else {
+                player.sendMessage(ChatColor.GREEN + "你获得了火箭靴! 请手动装备它们.");
+            }
+        } else {
+            // 直接装备火箭靴
+            player.getInventory().setBoots(rocketBoots);
+            player.sendMessage(ChatColor.GREEN + "你已装备火箭靴!");
+        }
+
+        player.playSound(player.getLocation(), Sound.ITEM_ARMOR_EQUIP_IRON, 1.0f, 1.0f);
+
+        return true;
+    }
 
     // 获取火箭靴
     public static ItemStack getRocketBoots() {

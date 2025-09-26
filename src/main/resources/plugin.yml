@@ -1,9 +1,10 @@
 name: RPGItems
 version: 1.0.0
-main: Moon2.rPGWeapon.Dicesword
+main: Moon2.rPGWeapon.Main
 api-version: 1.16
 authors:
   - Mooooonrabbbit
+  - WN_Mr_chen
 description: 添加自定义武器
 
 commands:

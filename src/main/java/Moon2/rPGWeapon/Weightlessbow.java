@@ -3,20 +3,19 @@ package Moon2.rPGWeapon;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Arrow;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -24,7 +23,7 @@ import java.util.UUID;
 
 import static Moon2.rPGWeapon.Main.plugin;
 
-public class Weightlessbow extends JavaPlugin implements Listener {
+public class Weightlessbow  implements Weapon {
 
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
     private final HashMap<UUID, Integer> drawingPlayers = new HashMap<>();
@@ -32,14 +31,12 @@ public class Weightlessbow extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        getServer().getPluginManager().registerEvents(this, this);
-        this.getCommand("weightlessbow").setExecutor(this);
-        getLogger().info("无重力长弓插件已启用!");
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        plugin.getCommand("weightlessbow").setExecutor(this);
     }
 
     @Override
     public void onDisable() {
-        getLogger().info("无重力长弓插件已禁用!");
     }
 
     // 命令处理
@@ -189,7 +186,7 @@ public class Weightlessbow extends JavaPlugin implements Listener {
                 arrowLoc.getWorld().spawnParticle(Particle.FIREWORK, arrowLoc, 1, 0.1, 0.1, 0.1, 0.01, null, true);
                 ticks++;
             }
-        }.runTaskTimer(this, 0, 1); // 每tick执行一次
+        }.runTaskTimer(plugin, 0, 1); // 每tick执行一次
     }
 
     // 处理箭矢命中事件

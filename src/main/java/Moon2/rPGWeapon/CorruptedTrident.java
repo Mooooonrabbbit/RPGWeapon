@@ -1,9 +1,12 @@
 package Moon2.rPGWeapon;
 
 import org.bukkit.*;
-import org.bukkit.entity.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Trident;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
@@ -13,6 +16,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.projectiles.ProjectileSource;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,10 +24,44 @@ import java.util.UUID;
 
 import static Moon2.rPGWeapon.Main.plugin;
 
-public class CorruptedTrident implements Listener {
+public class CorruptedTrident implements Weapon {
 
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
     private final long COOLDOWN_TIME = 500; // 0.5秒冷却时间
+
+    @Override
+    public void onEnable() {
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        plugin.getCommand("corruptedtrident").setExecutor(this);
+    }
+
+    @Override
+    public void onDisable() {
+    }
+
+    @Override
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
+        Player player = (Player) sender;
+
+        if (!player.hasPermission("corruptedtrident.get")) {
+            player.sendMessage(ChatColor.RED + "你没有权限使用这个命令!");
+            return true;
+        }
+
+        ItemStack corruptedTrident = getCorruptedTrident();
+        HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(corruptedTrident);
+
+        if (!leftover.isEmpty()) {
+            player.getWorld().dropItemNaturally(player.getLocation(), corruptedTrident);
+            player.sendMessage(ChatColor.YELLOW + "你的库存已满，腐蚀的三叉戟已掉落在地面上!");
+        } else {
+            player.sendMessage(ChatColor.GREEN + "你获得了腐蚀的三叉戟!");
+        }
+
+        player.playSound(player.getLocation(), Sound.ENTITY_ITEM_PICKUP, 1.0f, 1.0f);
+
+        return true;
+    }
 
     // 获取腐蚀的三叉戟
     public static ItemStack getCorruptedTrident() {

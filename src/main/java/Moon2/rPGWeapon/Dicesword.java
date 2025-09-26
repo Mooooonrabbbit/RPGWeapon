@@ -8,7 +8,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
@@ -16,12 +15,13 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class Dicesword extends JavaPlugin implements Listener {
+import static Moon2.rPGWeapon.Main.plugin;
+
+public class Dicesword implements Weapon {
 
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
     private final long COOLDOWN_TIME = 5000; // 5秒冷却时间
@@ -42,47 +42,42 @@ public class Dicesword extends JavaPlugin implements Listener {
 
     @Override
     public void onEnable() {
-        getServer().getPluginManager().registerEvents(this, this);
-        this.getCommand("dicesword").setExecutor(this);
-        getLogger().info("骰子大剑插件已启用!");
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        plugin.getCommand("dicesword").setExecutor(this);
     }
 
     @Override
     public void onDisable() {
-        getLogger().info("骰子大剑插件已禁用!");
     }
 
     // 命令处理
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (cmd.getName().equalsIgnoreCase("dicesword")) {
-            if (!(sender instanceof Player)) {
-                sender.sendMessage(ChatColor.RED + "只有玩家可以使用这个命令!");
-                return true;
-            }
-
-            Player player = (Player) sender;
-
-            if (!player.hasPermission("dicesword.get")) {
-                player.sendMessage(ChatColor.RED + "你没有权限使用这个命令!");
-                return true;
-            }
-
-            ItemStack diceSword = getDiceSword();
-            HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(diceSword);
-
-            if (!leftover.isEmpty()) {
-                player.getWorld().dropItemNaturally(player.getLocation(), diceSword);
-                player.sendMessage(ChatColor.YELLOW + "你的库存已满，骰子大剑已掉落在地面上!");
-            } else {
-                player.sendMessage(ChatColor.GREEN + "你获得了骰子大剑!");
-            }
-
-            player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
-
+        if (!(sender instanceof Player)) {
+            sender.sendMessage(ChatColor.RED + "只有玩家可以使用这个命令!");
             return true;
         }
-        return false;
+
+        Player player = (Player) sender;
+
+        if (!player.hasPermission("dicesword.get")) {
+            player.sendMessage(ChatColor.RED + "你没有权限使用这个命令!");
+            return true;
+        }
+
+        ItemStack diceSword = getDiceSword();
+        HashMap<Integer, ItemStack> leftover = player.getInventory().addItem(diceSword);
+
+        if (!leftover.isEmpty()) {
+            player.getWorld().dropItemNaturally(player.getLocation(), diceSword);
+            player.sendMessage(ChatColor.YELLOW + "你的库存已满，骰子大剑已掉落在地面上!");
+        } else {
+            player.sendMessage(ChatColor.GREEN + "你获得了骰子大剑!");
+        }
+
+        player.playSound(player.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+
+        return true;
     }
 
     // 获取骰子大剑
@@ -209,7 +204,7 @@ public class Dicesword extends JavaPlugin implements Listener {
             long timeLeft = cooldowns.get(playerId) + COOLDOWN_TIME - System.currentTimeMillis();
             if (timeLeft > 0) {
                 // 冷却中，不触发特殊效果，但允许普通攻击
-                player.sendActionBar(ChatColor.YELLOW + "骰子大剑冷却中: " + (timeLeft/1000) + "秒");
+                player.sendActionBar(ChatColor.YELLOW + "骰子大剑冷却中: " + (timeLeft / 1000) + "秒");
                 return;
             }
         }
@@ -287,6 +282,7 @@ public class Dicesword extends JavaPlugin implements Listener {
         // 添加骰子滚动动画效果
         new BukkitRunnable() {
             int count = 0;
+
             @Override
             public void run() {
                 if (count++ >= 10) {
@@ -296,18 +292,24 @@ public class Dicesword extends JavaPlugin implements Listener {
                 player.spawnParticle(Particle.CRIT, player.getLocation().add(0, 2, 0),
                         5, 0.5, 0.5, 0.5, 0.1);
             }
-        }.runTaskTimer(this, 0, 2);
+        }.runTaskTimer(plugin, 0, 2);
     }
 
     // 将数字转换为罗马数字（1-5）
     private String toRomanNumeral(int number) {
         switch (number) {
-            case 1: return "I";
-            case 2: return "II";
-            case 3: return "III";
-            case 4: return "IV";
-            case 5: return "V";
-            default: return "" + number;
+            case 1:
+                return "I";
+            case 2:
+                return "II";
+            case 3:
+                return "III";
+            case 4:
+                return "IV";
+            case 5:
+                return "V";
+            default:
+                return "" + number;
         }
     }
 }

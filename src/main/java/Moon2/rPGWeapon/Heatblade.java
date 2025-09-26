@@ -1,16 +1,18 @@
 package Moon2.rPGWeapon;
 
 import org.bukkit.*;
+import org.bukkit.command.Command;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -18,11 +20,29 @@ import java.util.UUID;
 
 import static Moon2.rPGWeapon.Main.plugin;
 
-public class Heatblade implements Listener {
+public class Heatblade implements Weapon {
 
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
     private final long COOLDOWN_TIME = 1000; // 1秒冷却时间
 
+    @Override
+    public void onEnable() {
+        plugin.getServer().getPluginManager().registerEvents(this, plugin);
+        plugin.getCommand("heatblade").setExecutor(this);
+    }
+
+    @Override
+    public void onDisable() {
+
+    }
+
+    @Override
+    public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
+        Player player = (Player) sender;
+        player.getInventory().addItem(getHeatBlade());
+        player.sendMessage(ChatColor.GOLD + "你获得了炽热之剑!");
+        return true;
+    }
 
     // 提供获取炽热之剑的方法
     public static ItemStack getHeatBlade() {
