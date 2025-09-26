@@ -33,7 +33,6 @@ public class Heatblade implements Weapon {
 
     @Override
     public void onDisable() {
-
     }
 
     @Override

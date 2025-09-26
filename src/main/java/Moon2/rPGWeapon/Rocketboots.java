@@ -47,11 +47,6 @@ public class Rocketboots implements Weapon {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String @NotNull [] args) {
         Player player = (Player) sender;
 
-        if (!player.hasPermission("rocketboots.get")) {
-            player.sendMessage(ChatColor.RED + "你没有权限使用这个命令!");
-            return true;
-        }
-
         ItemStack rocketBoots = getRocketBoots();
 
         // 检查玩家是否已经穿戴了靴子

@@ -1,10 +1,15 @@
 package Moon2.rPGWeapon;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TextComponent;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.damage.DamageSource;
+import org.bukkit.damage.DamageType;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,7 +21,9 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static Moon2.rPGWeapon.Main.plugin;
@@ -31,13 +38,11 @@ public class Dicesword implements Weapon {
 
     public Dicesword() {
         // 初始化所有可能的药水效果
-        List<PotionEffectType> effects = new ArrayList<>();
-        for (PotionEffectType type : PotionEffectType.values()) {
-            if (type != null && type != PotionEffectType.HERO_OF_THE_VILLAGE) { // 排除一些不适宜的效果
-                effects.add(type);
-            }
-        }
-        ALL_EFFECTS = effects.toArray(new PotionEffectType[0]);
+        ALL_EFFECTS = Arrays.stream(PotionEffectType.values()).filter(potionEffectType -> {
+            if (potionEffectType == PotionEffectType.HERO_OF_THE_VILLAGE) return false;
+            if (potionEffectType == PotionEffectType.BAD_OMEN) return false;
+            return true;
+        }).toArray(PotionEffectType[]::new);
     }
 
     @Override
@@ -53,6 +58,7 @@ public class Dicesword implements Weapon {
     // 命令处理
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+
         if (!(sender instanceof Player)) {
             sender.sendMessage(ChatColor.RED + "只有玩家可以使用这个命令!");
             return true;
@@ -92,13 +98,11 @@ public class Dicesword implements Weapon {
                 ChatColor.GRAY + "每次攻击都是全新的冒险",
                 ChatColor.GRAY + "福兮祸所依，祸兮福所伏"
         ));
-        UUID attackSpeedUUID = UUID.fromString("a6c113ba-6c4d-4b3c-b36a-5a4d5a5a5a5a");
         AttributeModifier slowAttackModifier = new AttributeModifier(
-                attackSpeedUUID,
-                "dice_sword_slow_speed",
+                Attribute.ATTACK_SPEED.getKey(),
                 -3.8,
                 AttributeModifier.Operation.ADD_NUMBER,
-                EquipmentSlot.HAND
+                EquipmentSlot.HAND.getGroup()
         );
         meta.addAttributeModifier(Attribute.ATTACK_SPEED, slowAttackModifier);
         meta.setUnbreakable(true);
@@ -147,53 +151,16 @@ public class Dicesword implements Weapon {
         return effectType == PotionEffectType.INSTANT_DAMAGE || effectType == PotionEffectType.INSTANT_HEALTH;
     }
 
-    // 获取药水效果的中文名称
-    private String getEffectDisplayName(PotionEffectType effectType) {
-        // 这里可以扩展为更完整的中文映射
-        Map<PotionEffectType, String> effectNames = new HashMap<>();
-        effectNames.put(PotionEffectType.SPEED, "速度");
-        effectNames.put(PotionEffectType.SLOWNESS, "缓慢");
-        effectNames.put(PotionEffectType.HASTE, "急迫");
-        effectNames.put(PotionEffectType.MINING_FATIGUE, "挖掘疲劳");
-        effectNames.put(PotionEffectType.STRENGTH, "力量");
-        effectNames.put(PotionEffectType.INSTANT_HEALTH, "瞬间治疗");
-        effectNames.put(PotionEffectType.INSTANT_DAMAGE, "瞬间伤害");
-        effectNames.put(PotionEffectType.JUMP_BOOST, "跳跃提升");
-        effectNames.put(PotionEffectType.NAUSEA, "反胃");
-        effectNames.put(PotionEffectType.REGENERATION, "生命恢复");
-        effectNames.put(PotionEffectType.RESISTANCE, "抗性提升");
-        effectNames.put(PotionEffectType.FIRE_RESISTANCE, "防火");
-        effectNames.put(PotionEffectType.WATER_BREATHING, "水下呼吸");
-        effectNames.put(PotionEffectType.INVISIBILITY, "隐身");
-        effectNames.put(PotionEffectType.BLINDNESS, "失明");
-        effectNames.put(PotionEffectType.NIGHT_VISION, "夜视");
-        effectNames.put(PotionEffectType.HUNGER, "饥饿");
-        effectNames.put(PotionEffectType.WEAKNESS, "虚弱");
-        effectNames.put(PotionEffectType.POISON, "中毒");
-        effectNames.put(PotionEffectType.WITHER, "凋零");
-        effectNames.put(PotionEffectType.HEALTH_BOOST, "生命提升");
-        effectNames.put(PotionEffectType.ABSORPTION, "伤害吸收");
-        effectNames.put(PotionEffectType.SATURATION, "饱和");
-        effectNames.put(PotionEffectType.GLOWING, "发光");
-        effectNames.put(PotionEffectType.LEVITATION, "飘浮");
-        effectNames.put(PotionEffectType.LUCK, "幸运");
-        effectNames.put(PotionEffectType.UNLUCK, "霉运");
-        effectNames.put(PotionEffectType.SLOW_FALLING, "缓降");
-        effectNames.put(PotionEffectType.CONDUIT_POWER, "潮涌能量");
-        effectNames.put(PotionEffectType.DOLPHINS_GRACE, "海豚的恩惠");
-        effectNames.put(PotionEffectType.BAD_OMEN, "不祥之兆");
-        effectNames.put(PotionEffectType.HERO_OF_THE_VILLAGE, "村庄英雄");
-
-        return effectNames.getOrDefault(effectType, effectType.getName());
-    }
-
     // 处理攻击事件
     @EventHandler
     public void onEntityDamage(EntityDamageByEntityEvent event) {
+        Entity damager = event.getDamager();
+        if (event.getDamageSource().getDamageType().equals(DamageType.GENERIC)) {
+            return;
+        }
         // 检查攻击者是否是玩家并且使用的是骰子大剑
-        if (!(event.getDamager() instanceof Player)) return;
-
-        Player player = (Player) event.getDamager();
+        if (!(damager instanceof Player)) return;
+        Player player = (Player) damager;
         ItemStack weapon = player.getInventory().getItemInMainHand();
 
         if (!isDiceSword(weapon)) return;
@@ -225,10 +192,9 @@ public class Dicesword implements Weapon {
         // 生成随机药水效果（对双方）
         PotionEffect selfEffect = getRandomEffect();
         PotionEffect targetEffect = getRandomEffect();
-
         // 应用伤害（负伤害表示治疗）
         if (damageToSelf > 0) {
-            player.damage(damageToSelf);
+            player.damage(damageToTarget, DamageSource.builder(DamageType.GENERIC).build());
         } else if (damageToSelf < 0) {
             double healAmount = -damageToSelf;
             double newHealth = Math.min(player.getHealth() + healAmount, player.getMaxHealth());
@@ -236,7 +202,7 @@ public class Dicesword implements Weapon {
         }
 
         if (damageToTarget > 0) {
-            target.damage(damageToTarget, player);
+            target.damage(damageToTarget, DamageSource.builder(DamageType.GENERIC).build());
         } else if (damageToTarget < 0) {
             double healAmount = -damageToTarget;
             double newHealth = Math.min(target.getHealth() + healAmount, target.getMaxHealth());
@@ -268,16 +234,16 @@ public class Dicesword implements Weapon {
         String targetDamageText = (damageToTarget >= 0) ?
                 ChatColor.RED + "+" + damageToTarget : ChatColor.GREEN + "" + damageToTarget;
 
-        String selfEffectText = ChatColor.AQUA + getEffectDisplayName(selfEffect.getType()) +
-                ChatColor.GOLD + toRomanNumeral(selfEffect.getAmplifier() + 1);
-        String targetEffectText = ChatColor.AQUA + getEffectDisplayName(targetEffect.getType()) +
-                ChatColor.GOLD + toRomanNumeral(targetEffect.getAmplifier() + 1);
+        TextComponent component = Component.empty()
+                .append(Component.text(ChatColor.GREEN + "自己: " + selfDamageText + " "))
+                .append(Component.translatable(selfEffect.getType().translationKey()))
+                .append(Component.text(ChatColor.GOLD + toRomanNumeral(selfEffect.getAmplifier() + 1) + " "))
+                .append(Component.text(ChatColor.WHITE + "  ||  " + ChatColor.RED + "对方: " + targetDamageText + " " + ChatColor.AQUA))
+                .append(Component.translatable(targetEffect.getType().translationKey()))
+                .append(Component.text(ChatColor.GOLD + toRomanNumeral(targetEffect.getAmplifier() + 1)))
+                ;
 
-        String actionBarMessage = ChatColor.GREEN + "自己: " + selfDamageText + " " + selfEffectText +
-                ChatColor.WHITE + "  ||  " +
-                ChatColor.RED + "对方: " + targetDamageText + " " + targetEffectText;
-
-        player.sendActionBar(actionBarMessage);
+        player.sendActionBar(component);
 
         // 添加骰子滚动动画效果
         new BukkitRunnable() {

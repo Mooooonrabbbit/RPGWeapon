@@ -14,7 +14,7 @@ commands:
   corruptedtrident:
     description: 获取腐蚀的三叉戟
     usage: /corruptedtrident
-  rocketboots:
+  rocketboot:
     description: 获取火箭靴
     usage: /rocketboot
   weightlessbow:

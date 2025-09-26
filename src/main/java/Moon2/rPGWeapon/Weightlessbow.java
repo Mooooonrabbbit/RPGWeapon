@@ -23,7 +23,8 @@ import java.util.UUID;
 
 import static Moon2.rPGWeapon.Main.plugin;
 
-public class Weightlessbow  implements Weapon {
+
+public class Weightlessbow implements Weapon {
 
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
     private final HashMap<UUID, Integer> drawingPlayers = new HashMap<>();
