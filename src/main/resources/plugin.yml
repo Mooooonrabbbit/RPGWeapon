@@ -1,6 +1,6 @@
 name: RPGItems
 version: 1.0.0
-main: Moon2.rPGWeapon.Main
+main: Moon2.rPGWeapon.Dicesword
 api-version: 1.16
 authors:
   - Mooooonrabbbit
@@ -16,3 +16,9 @@ commands:
   rocketboots:
     description: 获取火箭靴
     usage: /rocketboot
+  weightlessbow:
+    description: 获取无重力长弓
+    usage: /weightlessbow
+  dicesword:
+    description: 获取骰子大剑
+    usage: /dicesword

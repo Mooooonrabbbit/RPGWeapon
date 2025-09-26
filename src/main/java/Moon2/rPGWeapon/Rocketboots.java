@@ -1,8 +1,6 @@
 package Moon2.rPGWeapon;
 
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -27,7 +25,7 @@ public class Rocketboots implements Listener {
 
     // 获取火箭靴
     public static ItemStack getRocketBoots() {
-        ItemStack boots = new ItemStack(Material.CHAINMAIL_BOOTS);
+        ItemStack boots = new ItemStack(Material.GOLDEN_BOOTS);
         ItemMeta meta = boots.getItemMeta();
         // 设置名称和描述
         meta.setDisplayName(ChatColor.GOLD + "火箭靴");
@@ -45,7 +43,7 @@ public class Rocketboots implements Listener {
 
     // 检查物品是否是火箭靴
     private boolean isRocketBoots(ItemStack item) {
-        if (item == null || item.getType() != Material.CHAINMAIL_BOOTS || !item.hasItemMeta()) {
+        if (item == null || item.getType() != Material.GOLDEN_BOOTS || !item.hasItemMeta()) {
             return false;
         }
 
@@ -108,7 +106,7 @@ public class Rocketboots implements Listener {
                     int remaining = boots.getType().getMaxDurability() - newDurability;
                     if (remaining < 20) {
                         player.sendTitle(ChatColor.RED + "燃料不足!",
-                                ChatColor.YELLOW + "剩余燃料: " + remaining,
+                                ChatColor.YELLOW + "",
                                 10, 40, 10);
                         player.getWorld().playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BELL, 1.0f, 1.2f);
                     }
@@ -141,21 +139,19 @@ public class Rocketboots implements Listener {
         if (!rocketActive.getOrDefault(player.getUniqueId(), false)) {
             return;
         }
+        System.out.println("Velocity=" + player.getVelocity());
 
         ItemStack boots = player.getInventory().getBoots();
         if (boots == null || !isRocketBoots(boots)) {
             rocketActive.put(player.getUniqueId(), false);
             return;
         }
+
         Vector currentVel = player.getVelocity();
-        float yaw = player.getYaw();
-
         // 获取玩家当前的 velocity 向量
-        Vector newVel = new Vector(currentVel.getX(), Math.max(1.0,currentVel.getY() + 0.2), currentVel.getZ());
+        Vector newVel = new Vector(currentVel.getX(),0.6, currentVel.getZ());
 
-        // 将新的速度向量应用给玩家
         player.setVelocity(newVel);
-
         // 生成粒子效果
         Location loc = player.getLocation().add(0, 0.1, 0);
         player.getWorld().spawnParticle(Particle.LARGE_SMOKE, loc, 10, 0.2, 0, 0.2, 0.02);
