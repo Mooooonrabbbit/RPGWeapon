@@ -4,10 +4,6 @@ import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
@@ -42,6 +38,7 @@ public class Minerhelmet implements Weapon {
 
     // 矿石显示名称映射
     private final Map<Material, String> ORE_NAMES = new HashMap<>();
+    private int checkTask;
 
     @Override
     public void onEnable() {
@@ -50,19 +47,21 @@ public class Minerhelmet implements Weapon {
         initializeOreNames();
 
         // 启动定时任务检查所有在线玩家
-        new BukkitRunnable() {
+        checkTask = new BukkitRunnable() {
             @Override
             public void run() {
                 for (Player player : Bukkit.getOnlinePlayers()) {
                     checkAndStartHelmetTask(player);
                 }
             }
-        }.runTaskTimer(plugin, 0, 20); // 每秒检查一次
+        }.runTaskTimer(plugin, 0, 20).getTaskId(); // 每秒检查一次
     }
 
     @Override
     public void onDisable() {
         // 取消所有运行中的任务
+        Bukkit.getScheduler().cancelTask(checkTask);
+
         for (int taskId : playerTasks.values()) {
             Bukkit.getScheduler().cancelTask(taskId);
         }
@@ -206,19 +205,16 @@ public class Minerhelmet implements Weapon {
                 }
 
                 // 每10秒（200ticks）执行一次主要逻辑
-                if (tickCounter % 200 == 0) {
+                if (tickCounter % 2 == 0) {
                     executeHelmetLogic(player, helmet);
                 }
 
                 // 每5秒（100ticks）扫描一次矿石（为了更实时的显示）
-                if (tickCounter % 100 == 0) {
-                    scanAndDisplayOres(player, helmet);
-                }
+                scanAndDisplayOres(player, helmet);
 
                 tickCounter++;
-                if (tickCounter >= 200) tickCounter = 0; // 防止溢出
             }
-        }.runTaskTimer(plugin, 0, 1).getTaskId(); // 每tick执行一次
+        }.runTaskTimer(plugin, 0, 100).getTaskId(); // 每tick执行一次
 
         playerTasks.put(playerId, taskId);
     }
@@ -317,28 +313,27 @@ public class Minerhelmet implements Weapon {
         }
     }
 
-    // 事件监听器
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        // 玩家加入时检查是否戴着矿工帽子
-        Bukkit.getScheduler().runTaskLater(plugin, () -> {
-            checkAndStartHelmetTask(event.getPlayer());
-        }, 20); // 延迟1秒执行，确保玩家完全加载
-    }
 
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        // 玩家退出时停止任务
-        stopHelmetTask(event.getPlayer());
-    }
-
-    @EventHandler
-    public void onInventoryClick(InventoryClickEvent event) {
-        // 当玩家点击装备栏时检查帽子状态
-        if (event.getWhoClicked() instanceof Player player) {
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                checkAndStartHelmetTask(player);
-            }, 1);
-        }
-    }
+//    // 事件监听器
+//    @EventHandler
+//    public void onPlayerJoin(PlayerJoinEvent event) {
+//        // 玩家加入时检查是否戴着矿工帽子
+//        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+//            checkAndStartHelmetTask(event.getPlayer());
+//        }, 20); // 延迟1秒执行，确保玩家完全加载
+//    }
+//
+//    @EventHandler
+//    public void onPlayerQuit(PlayerQuitEvent event) {
+//        // 玩家退出时停止任务
+//        stopHelmetTask(event.getPlayer());
+//    }
+//
+//    @EventHandler
+//    public void onInventoryClick(InventoryClickEvent event) {
+//        // 当玩家点击装备栏时检查帽子状态
+//        if (event.getWhoClicked() instanceof Player player) {
+//            checkAndStartHelmetTask(player);
+//        }
+//    }
 }
