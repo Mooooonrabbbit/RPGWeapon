@@ -31,7 +31,7 @@ import static Moon2.rPGWeapon.Main.plugin;
 public class Dicesword implements Weapon {
 
     private final HashMap<UUID, Long> cooldowns = new HashMap<>();
-    private final long COOLDOWN_TIME = 5000; // 5秒冷却时间
+    private final long COOLDOWN_TIME = 2000; // 5秒冷却时间
 
     // 存储所有可能的药水效果（排除一些不适宜的效果）
     private final PotionEffectType[] ALL_EFFECTS;
@@ -100,7 +100,7 @@ public class Dicesword implements Weapon {
         ));
         AttributeModifier slowAttackModifier = new AttributeModifier(
                 Attribute.ATTACK_SPEED.getKey(),
-                -3.8,
+                -3.5,
                 AttributeModifier.Operation.ADD_NUMBER,
                 EquipmentSlot.HAND.getGroup()
         );
@@ -162,7 +162,6 @@ public class Dicesword implements Weapon {
         if (!(damager instanceof Player)) return;
         Player player = (Player) damager;
         ItemStack weapon = player.getInventory().getItemInMainHand();
-
         if (!isDiceSword(weapon)) return;
 
         // 检查冷却时间
@@ -170,18 +169,21 @@ public class Dicesword implements Weapon {
         if (cooldowns.containsKey(playerId)) {
             long timeLeft = cooldowns.get(playerId) + COOLDOWN_TIME - System.currentTimeMillis();
             if (timeLeft > 0) {
+                event.setDamage(0);
                 // 冷却中，不触发特殊效果，但允许普通攻击
-                player.sendActionBar(ChatColor.YELLOW + "骰子大剑冷却中: " + (timeLeft / 1000) + "秒");
+                player.sendActionBar(ChatColor.YELLOW + "骰子大剑冷却中: " + ((timeLeft / 1000) + 1)  + "秒");
                 return;
+
             }
         }
 
+        event.setDamage(0);
         // 检查受害者是否是生物
         if (!(event.getEntity() instanceof LivingEntity)) return;
 
         LivingEntity target = (LivingEntity) event.getEntity();
 
-        // 取消原版伤害，我们将应用随机伤害
+        // 取消原版伤害，应用随机伤害
         double originalDamage = event.getDamage();
         event.setDamage(0);
 
@@ -215,7 +217,7 @@ public class Dicesword implements Weapon {
 
         // 设置冷却时间
         cooldowns.put(playerId, System.currentTimeMillis());
-        player.setCooldown(Material.NETHERITE_SWORD, 100); // 5秒冷却（20ticks/秒）
+        player.setCooldown(Material.NETHERITE_SWORD, 40); // 5秒冷却（20ticks/秒）
 
         // 生成随机粒子效果
         Location loc = target.getLocation();

@@ -23,3 +23,6 @@ commands:
   dicesword:
     description: 获取骰子大剑
     usage: /dicesword
+  minerhelmet:
+    description: 获取矿工帽子
+    usage: /minerhelmet

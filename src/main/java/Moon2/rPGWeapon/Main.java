@@ -5,6 +5,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.util.ArrayList;
 import java.util.List;
 
+
 public class Main extends JavaPlugin {
 
     public static JavaPlugin plugin;
@@ -18,7 +19,7 @@ public class Main extends JavaPlugin {
         weapons.add(new CorruptedTrident());
         weapons.add(new Dicesword());
         weapons.add(new Weightlessbow());
-
+        weapons.add(new Minerhelmet());
         weapons.forEach(Weapon::onEnable);
         getLogger().info("插件已启用!");
     }
