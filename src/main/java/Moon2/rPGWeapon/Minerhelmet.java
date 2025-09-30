@@ -4,6 +4,8 @@ import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
@@ -178,7 +180,7 @@ public class Minerhelmet implements Weapon {
             startHelmetTask(player);
         }
         // 如果玩家没有戴矿工帽子但有任务运行
-        else if (!minerHelmet || playerTasks.containsKey(playerId)) {
+        else if (!minerHelmet && playerTasks.containsKey(playerId)) {
             stopHelmetTask(player);
         }
     }
@@ -215,7 +217,7 @@ public class Minerhelmet implements Weapon {
                 tickCounter++;
             }
         }.runTaskTimer(plugin, 0, 100).getTaskId(); // 每tick执行一次
-
+        System.out.println(taskId);
         playerTasks.put(playerId, taskId);
     }
 
@@ -313,6 +315,11 @@ public class Minerhelmet implements Weapon {
         }
     }
 
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        // 玩家退出时停止任务
+        stopHelmetTask(event.getPlayer());
+    }
 
 //    // 事件监听器
 //    @EventHandler
@@ -323,11 +330,6 @@ public class Minerhelmet implements Weapon {
 //        }, 20); // 延迟1秒执行，确保玩家完全加载
 //    }
 //
-//    @EventHandler
-//    public void onPlayerQuit(PlayerQuitEvent event) {
-//        // 玩家退出时停止任务
-//        stopHelmetTask(event.getPlayer());
-//    }
 //
 //    @EventHandler
 //    public void onInventoryClick(InventoryClickEvent event) {
