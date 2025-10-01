@@ -26,3 +26,6 @@ commands:
   minerhelmet:
     description: 获取矿工帽子
     usage: /minerhelmet
+  stormwand:
+    description: 获取雷暴雨
+    usage: /stormwand

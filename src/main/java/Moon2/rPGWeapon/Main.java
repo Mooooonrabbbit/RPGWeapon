@@ -20,6 +20,7 @@ public class Main extends JavaPlugin {
         weapons.add(new Dicesword());
         weapons.add(new Weightlessbow());
         weapons.add(new Minerhelmet());
+        weapons.add(new Stormwand());
         weapons.forEach(Weapon::onEnable);
         getLogger().info("插件已启用!");
     }

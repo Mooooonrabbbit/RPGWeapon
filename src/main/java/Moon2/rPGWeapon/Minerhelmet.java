@@ -143,7 +143,8 @@ public class Minerhelmet implements Weapon {
         meta.setLore(Arrays.asList(
                 ChatColor.GRAY + "专业的采矿装备",
                 ChatColor.GRAY + "提供照明和矿物探测功能",
-                ChatColor.GRAY + "需要定期充能"
+                ChatColor.GRAY + "需要定期充能",
+                ChatColor.GOLD + "+矿工的直觉"
         ));
 
         // 设置自定义模型数据
@@ -260,11 +261,11 @@ public class Minerhelmet implements Weapon {
             player.getInventory().setHelmet(helmet);
         }
 
-        // 给予药水效果（11秒）
-        player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 20 * 20, 0)); // 急迫1
-        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 20 * 20, 0)); // 速度1
-        player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 20 * 20, 0)); // 发光1
-        player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, 20 * 20, 0)); // 发光1
+        // 给予药水效果（20秒）
+        player.addPotionEffect(new PotionEffect(PotionEffectType.HASTE, 21 * 20, 0)); // 急迫1
+        player.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 21 * 20, 0)); // 速度1
+        player.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 21 * 20, 0)); // 发光1
+        player.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, 21 * 20, 0)); // 发光1
 
         // 播放激活音效
         player.playSound(player.getLocation(), Sound.BLOCK_BEACON_ACTIVATE, 0.5f, 1.5f);
@@ -301,6 +302,7 @@ public class Minerhelmet implements Weapon {
         // 构建ActionBar消息
         if (totalOres > 0) {
             StringBuilder message = new StringBuilder();
+            message.append(ChatColor.GOLD).append("*矿工的直觉：");
             message.append(ChatColor.YELLOW).append("附近有").append(totalOres).append("个矿石，其中");
 
             List<String> oreEntries = new ArrayList<>();
@@ -311,7 +313,7 @@ public class Minerhelmet implements Weapon {
             message.append(String.join("，", oreEntries));
             player.sendActionBar(message.toString());
         } else {
-            player.sendActionBar(ChatColor.GRAY + "附近没有检测到矿石");
+            player.sendActionBar(ChatColor.GRAY + "附近没有任何矿石");
         }
     }
 
