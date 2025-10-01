@@ -74,7 +74,7 @@ public class Stormwand implements Weapon {
 
     // 获取雷暴魔法杖
     public static ItemStack getStormWand() {
-        ItemStack wand = new ItemStack(Material.BLAZE_ROD);
+        ItemStack wand = new ItemStack(Material.BREEZE_ROD);
         ItemMeta meta = wand.getItemMeta();
 
         // 设置武器名称和描述
@@ -95,13 +95,13 @@ public class Stormwand implements Weapon {
 
     // 检查物品是否是雷暴魔法杖
     private boolean isStormWand(ItemStack item) {
-        if (item == null || item.getType() != Material.BLAZE_ROD || !item.hasItemMeta()) {
+        if (item == null || item.getType() != Material.BREEZE_ROD || !item.hasItemMeta()) {
             return false;
         }
 
         ItemMeta meta = item.getItemMeta();
         return meta.hasDisplayName() &&
-                meta.getDisplayName().equals(ChatColor.BLUE + "雷暴雨  ");
+                meta.getDisplayName().equals(ChatColor.BLUE + "雷暴雨");
     }
 
     // 获取玩家指向的目标位置
@@ -200,10 +200,10 @@ public class Stormwand implements Weapon {
                 if (player.isOnline()) {
                     player.playSound(player.getLocation(),
                             Sound.BLOCK_BEACON_DEACTIVATE, 1.0f, 1.2f);
-                    player.sendActionBar(ChatColor.AQUA + "⚡ 雷暴魔法杖已就绪！");
+                    player.sendActionBar(ChatColor.AQUA + "⚡ 雷暴雨已就绪！");
                 }
             }
-        }.runTaskLater(plugin, 15 * 20);
+        }.runTaskLater(plugin, 3 * 60 * 20);
     }
 
     // 设置客户端天气效果
@@ -223,18 +223,18 @@ public class Stormwand implements Weapon {
             player.setPlayerWeather(org.bukkit.WeatherType.DOWNFALL);
         }
 
-        // 3分钟后恢复原天气
+        // 3min后恢复原天气
         new BukkitRunnable() {
             @Override
             public void run() {
                 for (Player player : nearbyPlayers) {
                     if (player.isOnline()) {
                         player.resetPlayerWeather();
-                        player.sendActionBar(ChatColor.GREEN + "天气恢复正常");
+                        player.sendActionBar(ChatColor.GREEN + "*乌云退散");
                     }
                 }
             }
-        }.runTaskLater(plugin, 3 * 60 * 20); // 3分钟
+        }.runTaskLater(plugin, 3 * 60 * 20); // 15s
     }
 
     // 处理玩家交互事件
