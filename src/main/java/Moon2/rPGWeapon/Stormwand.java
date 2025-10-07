@@ -139,7 +139,7 @@ public class Stormwand implements Weapon {
         player.spawnParticle(Particle.ELECTRIC_SPARK, playerHead, 20, 0.5, 0.5, 0.5, 0.1);
 
         // 目标位置粒子
-        player.spawnParticle(Particle.END_ROD, target, 15, 1, 1, 1, 0.05);
+        player.spawnParticle(Particle.END_ROD, target, 40, 2, 1, 2, 0.1,null,true);
 
         // 连接线粒子效果
         new BukkitRunnable() {
@@ -156,9 +156,9 @@ public class Stormwand implements Weapon {
                 double distance = direction.length();
                 direction.normalize();
 
-                for (double i = 0; i < distance; i += 0.5) {
+                for (double i = 0; i < distance; i += 2) {
                     Location point = playerHead.clone().add(direction.clone().multiply(i));
-                    player.spawnParticle(Particle.REVERSE_PORTAL, point, 1, 0, 0, 0, 0);
+                    player.spawnParticle(Particle.ELECTRIC_SPARK, point, 1, 0.3, 0.3, 0.3, 0, null,true);
                 }
             }
         }.runTaskTimer(plugin, 0, 1);
@@ -203,7 +203,7 @@ public class Stormwand implements Weapon {
                     player.sendActionBar(ChatColor.AQUA + "⚡ 雷暴雨已就绪！");
                 }
             }
-        }.runTaskLater(plugin, 3 * 60 * 20);
+        }.runTaskLater(plugin, 15 * 20);
     }
 
     // 设置客户端天气效果
@@ -231,10 +231,12 @@ public class Stormwand implements Weapon {
                     if (player.isOnline()) {
                         player.resetPlayerWeather();
                         player.sendActionBar(ChatColor.GREEN + "*乌云退散");
+                        player.playSound(player.getLocation(),
+                                Sound.BLOCK_AMETHYST_CLUSTER_PLACE, 1.0f, 1.4f);
                     }
                 }
             }
-        }.runTaskLater(plugin, 3 * 60 * 20); // 15s
+        }.runTaskLater(plugin, 15 * 20); // 15s
     }
 
     // 处理玩家交互事件
@@ -282,6 +284,36 @@ public class Stormwand implements Weapon {
 
         // 执行魔法效果
         executeStormMagic(player, targetLoc);
+        executeStormDecoration(player, targetLoc);
+    }
+
+
+    private void executeStormDecoration(Player player, Location center) {
+        // 先播放蓄力效果
+        playChargingParticles(player, center);
+
+        // 播放准备音效
+        player.playSound(player.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 1.0f, 1.0f);
+
+        // 执行装饰效果，直接进入冷却
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                // 消耗经验值
+                player.giveExp(-EXPERIENCE_COST);
+
+                // 设置冷却
+                cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+                player.setCooldown(Material.BREEZE_ROD, 15 * 20); // 15秒冷却条
+
+                // 应用负面效果
+                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 15 * 20, 0));
+                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 2 * 20, 3));
+
+                // 设置客户端天气
+                setClientWeather(player, center);
+            }
+        }.runTaskLater(plugin, 0);
     }
 
     // 执行雷暴魔法
@@ -292,23 +324,21 @@ public class Stormwand implements Weapon {
         // 播放准备音效
         player.playSound(player.getLocation(), Sound.BLOCK_BEACON_POWER_SELECT, 1.0f, 1.0f);
 
-        // 短暂延迟后执行主要效果
         new BukkitRunnable() {
             @Override
             public void run() {
-                // 消耗经验值
-                player.giveExp(-EXPERIENCE_COST);
-
-                // 设置冷却
-                cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
-                player.setCooldown(Material.BLAZE_ROD, 15 * 20); // 15秒冷却条
-
-                // 应用负面效果
-                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 15 * 20, 0));
-                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 2 * 20, 3));
-
-                // 设置客户端天气
-                setClientWeather(player, center);
+//                // 消耗经验值
+//                player.giveExp(-EXPERIENCE_COST);
+//
+//                // 设置冷却
+//                cooldowns.put(player.getUniqueId(), System.currentTimeMillis());
+//                player.setCooldown(Material.BREEZE_ROD, 15 * 20); // 15秒冷却条
+//
+//                // 应用负面效果
+//                player.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 15 * 20, 0));
+//                player.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, 2 * 20, 3));
+//                // 设置客户端天气
+//                setClientWeather(player, center);
 
                 // 生成闪电
                 Location[] locations = calculateStormLocations(center);
@@ -320,6 +350,8 @@ public class Stormwand implements Weapon {
                 // 发送使用消息
                 player.sendActionBar(ChatColor.BLUE + "⚡ 召唤了雷暴！");
             }
-        }.runTaskLater(plugin, 10); // 0.5秒延迟用于蓄力效果
+        }.runTaskLater(plugin, 30); // 1.5秒延迟用于蓄力效果
     }
+
+
 }

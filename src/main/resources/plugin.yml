@@ -29,3 +29,6 @@ commands:
   stormwand:
     description: 获取雷暴雨
     usage: /stormwand
+  multishotcrossbow:
+    description: 获取多重散射弩
+    usage: /multishotcrossbow
