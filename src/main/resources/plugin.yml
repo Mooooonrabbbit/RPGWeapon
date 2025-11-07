@@ -32,3 +32,9 @@ commands:
   multishotcrossbow:
     description: 获取多重散射弩
     usage: /multishotcrossbow
+  Specialcrossbow:
+    description: 获取测试弩
+    usage: /specialcrossbow
+  Testcrossbow:
+    description: 获取测试散射弩
+    usage: /testcrossbow
