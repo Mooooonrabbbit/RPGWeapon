@@ -2,26 +2,22 @@ package Moon2.rPGWeapon;
 
 import org.bukkit.*;
 import org.bukkit.command.Command;
-import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.util.Vector;
-
 import java.util.Arrays;
 import static Moon2.rPGWeapon.Main.plugin;
+
 import static org.bukkit.Bukkit.getServer;
 public class Specialcrossbow implements Weapon {
 
@@ -39,25 +35,10 @@ public class Specialcrossbow implements Weapon {
         specialKey = new NamespacedKey(plugin, "special_crossbow");
         // 注册事件监听器
         getServer().getPluginManager().registerEvents(this, plugin);
-        // 注册合成配方
-        registerRecipes();
     }
 
     @Override
     public void onDisable() {
-    }
-
-    private void registerRecipes() {
-        // 特殊弩的合成配方
-        ItemStack specialCrossbow = createSpecialCrossbow();
-        ShapedRecipe recipe = new ShapedRecipe(new NamespacedKey(plugin, "specialcrossbow"), specialCrossbow);
-
-        recipe.shape("ISI", "SBS", "ISI");
-        recipe.setIngredient('I', Material.IRON_INGOT);
-        recipe.setIngredient('S', Material.STICK);
-        recipe.setIngredient('B', Material.CROSSBOW);
-
-        getServer().addRecipe(recipe);
     }
 
     // 创建特殊弩
@@ -92,6 +73,13 @@ public class Specialcrossbow implements Weapon {
 
         return meta.getPersistentDataContainer().has(specialKey, PersistentDataType.BYTE);
     }
+
+
+
+
+
+
+
 
     // 装填弹药
     public void loadAmmo(ItemStack crossbow, ItemStack ammo) {
@@ -238,7 +226,7 @@ public class Specialcrossbow implements Weapon {
         projectile.setShooter(player);
 
         // 设置自定义名称以便识别
-        projectile.setCustomName("SpecialCrossbowAmmo");
+        projectile.setCustomName("请输入文本");
         projectile.setCustomNameVisible(false);
 
         // 设置速度
@@ -278,11 +266,14 @@ public class Specialcrossbow implements Weapon {
             case LAVA_BUCKET:
                 hitLocation.getWorld().setBlockData(hitLocation, Material.LAVA.createBlockData());
                 hitLocation.getWorld().playSound(hitLocation, Sound.BLOCK_LAVA_POP, 1.0f, 1.0f);
+                hitLocation.getWorld().dropItemNaturally(hitLocation, ItemStack.of(Material.BUCKET));
                 break;
 
             case WATER_BUCKET:
+
                 hitLocation.getWorld().setBlockData(hitLocation, Material.WATER.createBlockData());
                 hitLocation.getWorld().playSound(hitLocation, Sound.BLOCK_WATER_AMBIENT, 1.0f, 1.0f);
+                hitLocation.getWorld().dropItemNaturally(hitLocation, ItemStack.of(Material.BUCKET));
                 break;
 
             case EGG:
@@ -318,10 +309,30 @@ public class Specialcrossbow implements Weapon {
                 // 食物击中回复生命
                 if (event.getHitEntity() instanceof LivingEntity) {
                     LivingEntity entity = (LivingEntity) event.getHitEntity();
+
+                    // 恢复生命值
+                    double currentHealth = entity.getHealth();
+                    double maxHealth = entity.getMaxHealth();
+                    double newHealth = Math.min(currentHealth + 4, maxHealth);
+                    entity.setHealth(newHealth);
+
+                    // 播放治疗效果粒子效果
+                    entity.getWorld().spawnParticle(Particle.HEART, entity.getLocation().add(0, 1, 0), 5, 0.5, 0.5, 0.5);
+
+                    // 播放音效
+                    entity.getWorld().playSound(entity.getLocation(), Sound.ENTITY_PLAYER_BURP, 1.0f, 1.0f);
+
+                    // 玩家特殊处理
                     if (entity instanceof Player) {
                         Player player = (Player) entity;
                         player.setFoodLevel(Math.min(player.getFoodLevel() + 4, 20));
-                        player.sendMessage("§a你被食物击中了，回复了饱食度!");
+                        player.sendMessage("§a你被食物击中了，回复了生命值和饱食度!");
+                    } else {
+                        // 对非玩家生物显示名称（如果有）
+                        String entityName = entity.getCustomName() != null ? entity.getCustomName() : entity.getName();
+                        entity.getWorld().getPlayers().forEach(p ->
+                                p.sendMessage("§e" + entityName + " 因食物恢复了生命值!")
+                        );
                     }
                 }
                 break;
@@ -336,13 +347,13 @@ public class Specialcrossbow implements Weapon {
 
             case ENDER_PEARL:
                 // 末影珍珠传送
-                Projectile snowball = null;
-                if (snowball.getShooter() instanceof Player) {
-                    Player shooter = (Player) snowball.getShooter();
-                    shooter.teleport(hitLocation);
-                    shooter.playSound(hitLocation, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
-                }
+//                if (snowball.getShooter() instanceof Player) {
+//                    Player shooter = (Player) snowball.getShooter();
+//                    shooter.teleport(hitLocation);
+//                    shooter.playSound(hitLocation, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+//                }
                 break;
+
 
             default:
                 // 对于普通物品，只是掉落该物品

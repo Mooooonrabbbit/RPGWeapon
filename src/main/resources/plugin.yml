@@ -35,6 +35,3 @@ commands:
   Specialcrossbow:
     description: 获取测试弩
     usage: /specialcrossbow
-  Testcrossbow:
-    description: 获取测试散射弩
-    usage: /testcrossbow
