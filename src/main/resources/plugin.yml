@@ -32,6 +32,6 @@ commands:
   multishotcrossbow:
     description: 获取多重散射弩
     usage: /multishotcrossbow
-  Specialcrossbow:
-    description: 获取测试弩
-    usage: /specialcrossbow
+  divinationrod:
+    description: 占卜钓竿
+    usage: /divinationrod
