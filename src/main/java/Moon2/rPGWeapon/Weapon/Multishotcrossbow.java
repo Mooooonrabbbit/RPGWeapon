@@ -1,5 +1,6 @@
-package Moon2.rPGWeapon;
+package Moon2.rPGWeapon.Weapon;
 
+import Moon2.rPGWeapon.Util;
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -10,16 +11,15 @@ import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.CrossbowMeta;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
+
 import static Moon2.rPGWeapon.Main.plugin;
 
 public class Multishotcrossbow implements Weapon {
@@ -35,7 +35,7 @@ public class Multishotcrossbow implements Weapon {
     public void onEnable() {
         plugin.getServer().getPluginManager().registerEvents(this, plugin);
         plugin.getCommand("multishotcrossbow").setExecutor(this);
-        Multishotcorssbow = new NamespacedKey(plugin, "special_crossbow");
+        Multishotcorssbow = new NamespacedKey(plugin, "multishot_crossbow");
     }
 
     @Override
@@ -74,7 +74,6 @@ public class Multishotcrossbow implements Weapon {
         }
         return false;
     }
-
 
 
     // 获取多重散射弩
@@ -136,7 +135,7 @@ public class Multishotcrossbow implements Weapon {
         if (cooldowns.containsKey(playerId)) {
             long timeLeft = cooldowns.get(playerId) + COOLDOWN_TIME - System.currentTimeMillis();
             if (timeLeft > 0) {
-                player.sendActionBar(ChatColor.RED + "冷却中: " + (timeLeft/1000) + "秒");
+                player.sendActionBar(ChatColor.RED + "冷却中: " + (timeLeft / 1000) + "秒");
                 player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f);
                 return;
             }
@@ -151,12 +150,11 @@ public class Multishotcrossbow implements Weapon {
         // 否则尝试装填
         else {
             // 检查副手是否有支持的抛射物
-            if (offHand != null ) {
-                loadProjectile(player, mainHand, crossbowMeta, offHand);
-            } else {
-                player.sendActionBar(ChatColor.RED + "副手没有可装填的抛射物!");
-                player.playSound(player.getLocation(), Sound.BLOCK_NOTE_BLOCK_BASS, 1.0f, 0.5f);
+            if (offHand.isEmpty()) {
+                offHand = new ItemStack(Material.ARROW);
             }
+            loadProjectile(player, mainHand, crossbowMeta, offHand);
+
         }
     }
 
@@ -218,7 +216,7 @@ public class Multishotcrossbow implements Weapon {
         Vector direction = eyeLocation.getDirection();
         crossbow.setItemMeta(meta);
 
-        spawnProjectile(player, projectileType, projectileItem, eyeLocation, direction,2.0f); // 1.5倍速度
+        spawnProjectile(player, projectileType, projectileItem, eyeLocation, direction, 2.0f); // 1.5倍速度
 
         // 播放发射音效
         player.playSound(player.getLocation(), Sound.ITEM_CROSSBOW_SHOOT, 2.0f, 1.0f);
@@ -246,119 +244,128 @@ public class Multishotcrossbow implements Weapon {
         projectile.setVelocity(direction.multiply(2.0));
     }
 
+
+    public static Map<Material, Class<? extends Projectile>> Projectiles = new HashMap<>();
+
+    static {
+        Projectiles.put(Material.WITHER_SKELETON_SKULL, WitherSkull.class);
+        Projectiles.put(Material.WIND_CHARGE, WindCharge.class);
+        Projectiles.put(Material.FIRE_CHARGE, SmallFireball.class);
+        Projectiles.put(Material.SNOWBALL, Snowball.class);
+        Projectiles.put(Material.EGG, Egg.class);
+        Projectiles.put(Material.ENDER_PEARL, EnderPearl.class);
+        Projectiles.put(Material.EXPERIENCE_BOTTLE, ThrownExpBottle.class);
+        Projectiles.put(Material.DRAGON_BREATH, DragonFireball.class);
+    }
+
+    public static Set<Material> Materials = new HashSet<>();
+
+
     // 替换特殊抛射物
     private void spawnProjectile(Player player, Material projectileType, ItemStack projectileItem, Location location, Vector direction, float speedMultiplier) {
         World world = player.getWorld();
+        Sound sound = Sound.ENTITY_ARROW_SHOOT;
 
+        Vector velocity = direction.multiply(speedMultiplier);
+
+        if (projectileType.isBlock()) {
+            FallingBlock fallingBlock = world.spawn(location, FallingBlock.class);
+            fallingBlock.setDropItem(true);
+            fallingBlock.setVelocity(velocity);
+            fallingBlock.shouldAutoExpire(false);
+            fallingBlock.setHurtEntities(true);
+            fallingBlock.setDamagePerBlock(1.2F);
+            fallingBlock.setMaxDamage(20);
+            fallingBlock.setBlockData(projectileType.createBlockData());
+            return;
+        }
+
+        if (Materials.contains(projectileType)) {
+            Snowball snowball = world.spawn(location, Snowball.class);
+            snowball.setItem(projectileItem.clone());
+            snowball.setVelocity(velocity);
+            snowball.setShooter(player);
+            snowball.setMetadata(String.valueOf(Multishotcorssbow), new FixedMetadataValue(plugin, (byte) 1));
+            return;
+        }
+
+        Projectile projectile = null;
         switch (projectileType) {
-            case WITHER_SKELETON_SKULL:
-                WitherSkull skull = world.spawn(location, WitherSkull.class);
-                skull.setDirection(direction);
-                skull.setVelocity(direction.multiply(speedMultiplier));
-                skull.setShooter(player);
-                player.playSound(player.getLocation(), Sound.ENTITY_WITHER_SHOOT, 1.0f, 1.0f);
-                break;
-            case WIND_CHARGE:
-                WindCharge windcharge = world.spawn(location, WindCharge.class);
-                windcharge.setDirection(direction);
-                windcharge.setVelocity(direction.multiply(speedMultiplier));
-                windcharge.setShooter(player);
-                player.playSound(player.getLocation(), Sound.ENTITY_EGG_THROW, 1.0f, 1.0f);
-
-            case FIRE_CHARGE:
-                // 发射小火球（类似发射器）
-                SmallFireball fireball = world.spawn(location, SmallFireball.class);
-                fireball.setDirection(direction);
-                fireball.setVelocity(direction.multiply(speedMultiplier));
-                fireball.setShooter(player);
-                player.playSound(player.getLocation(), Sound.ENTITY_GHAST_SHOOT, 1.0f, 1.0f);
-                break;
-            case SNOWBALL:
-            case EGG:
-            case ENDER_PEARL:
-            case EXPERIENCE_BOTTLE:
-                // 发射可投掷物品（更高初速度）
-                Projectile projectile;
-                if (projectileType == Material.SNOWBALL) {
-                    projectile = world.spawn(location, Snowball.class);
-                } else if (projectileType == Material.EGG) {
-                    projectile = world.spawn(location, Egg.class);
-                } else if (projectileType == Material.ENDER_PEARL) {
-                    projectile = world.spawn(location, EnderPearl.class);
-                } else { // EXPERIENCE_BOTTLE
-                    projectile = world.spawn(location, ThrownExpBottle.class);
-                }
-
-                projectile.setVelocity(direction.multiply(speedMultiplier * 2.0)); // 2倍原版速度
-                projectile.setShooter(player);
-                break;
-
-            case DRAGON_BREATH:
-                // 发射龙息弹
-                DragonFireball dragonFireball = world.spawn(location, DragonFireball.class);
-                dragonFireball.setDirection(direction);
-                dragonFireball.setVelocity(direction.multiply(speedMultiplier));
-                dragonFireball.setShooter(player);
-                player.playSound(player.getLocation(), Sound.ENTITY_ENDER_DRAGON_SHOOT, 1.0f, 0.8f);
-                break;
-
             case TNT:
                 // 发射激活的TNT
                 TNTPrimed tnt = world.spawn(location, TNTPrimed.class);
-                tnt.setVelocity(direction.multiply(speedMultiplier));
+                tnt.setVelocity(velocity);
                 tnt.setFuseTicks(40); // 2秒后爆炸
+                return;
+            case TIPPED_ARROW:
+                projectile = world.spawn(location, Projectiles.getOrDefault(projectileType, Arrow.class));
+                PotionMeta itemMeta = (PotionMeta) projectileItem.getItemMeta();
+                ((Arrow) projectile).setBasePotionType(itemMeta.getBasePotionType());
                 break;
-
+            case DRAGON_BREATH:
+                // 发射龙息弹
+                sound = Sound.ENTITY_ENDER_DRAGON_SHOOT;
+                break;
             case SPLASH_POTION:
             case LINGERING_POTION:
-                // 发射药水
-                ThrownPotion potion;
-                if (projectileType == Material.SPLASH_POTION) {
-                    potion = world.spawn(location, SplashPotion.class);
-                } else {
-                    potion = world.spawn(location, LingeringPotion.class);
-                }
-
-                potion.setItem(projectileItem);
-                potion.setVelocity(direction.multiply(speedMultiplier * 1.8)); // 1.8倍速度
-                potion.setShooter(player);
+                velocity = velocity.multiply(1.8);
                 break;
+            default:
+                Item item = world.spawn(location, Item.class);
+                item.setItemStack(projectileItem.clone());
+                item.setVelocity(velocity);
+                return;
         }
+
+        if (projectile == null) {
+            projectile = world.spawn(location, Projectiles.getOrDefault(projectileType, Arrow.class));
+        }
+
+        double velocityX = velocity.getX();
+        double velocityZ = velocity.getZ();
+        projectile.setRotation(
+                (float) (Util.atan2(velocityX, velocityZ) * 180.0F / (float) Math.PI),
+                (float) (Util.atan2(velocity.getY(), velocityX * velocityX + velocityZ * velocityZ) * 180.0F / (float) Math.PI)
+        );
+        projectile.setVelocity(velocity);
+        projectile.setShooter(player);
+        player.playSound(player.getLocation(), sound, 1.0f, 1.0f);
 
         // 生成发射粒子效果
         world.spawnParticle(Particle.CRIT, location, 10, 0.1, 0.1, 0.1, 0.05);
     }
 
+    // 发射物击中事件
+    @EventHandler
+    public void onProjectileHit(ProjectileHitEvent event) {
+        if (event.getEntity() instanceof Snowball snowball && snowball.hasMetadata(String.valueOf(Multishotcorssbow))) {
 
-//    // 发射物击中事件
-//    @EventHandler
-//    public void onProjectileHit(ProjectileHitEvent event) {
-//        if (!(event.getEntity() instanceof Snowball)) return;
-//
-//        Snowball snowball = (Snowball) event.getEntity();
-//        ItemStack ammo = snowball.getItem();
-//
-//        if (ammo == null || ammo.getType() == Material.AIR) return;
-//
-//        Location hitLocation = snowball.getLocation();
-//
-//        // 根据弹药物品类型产生不同效果
-//        handleAmmoEffects(ammo, event, hitLocation);
-//
-//        // 通用击中效果
-//        hitLocation.getWorld().playSound(hitLocation, Sound.ENTITY_ARROW_HIT, 1.0f, 1.0f);
-//        hitLocation.getWorld().spawnParticle(Particle.LARGE_SMOKE, hitLocation, 5, 0.1, 0.1, 0.1, 0.02);
-//    }
+            ItemStack ammo = snowball.getItem();
+
+            if (ammo.isEmpty() || ammo.getType() == Material.AIR) return;
+
+            Location hitLocation = snowball.getLocation();
+
+            // 根据弹药物品类型产生不同效果
+            handleAmmoEffects(ammo, event, hitLocation);
+
+            // 通用击中效果
+//            hitLocation.getWorld().playSound(hitLocation, Sound.ENTITY_ARROW_HIT, 1.0f, 1.0f);
+//            hitLocation.getWorld().spawnParticle(Particle.LARGE_SMOKE, hitLocation, 5, 0.1, 0.1, 0.1, 0.02);
+        }
+    }
+
+    static {
+        Materials.add(Material.BUCKET);
+        Materials.add(Material.WATER_BUCKET);
+        Materials.add(Material.LAVA_BUCKET);
+        Materials.add(Material.MILK_BUCKET);
+    }
 
     // 处理击中效果
     private void handleAmmoEffects(ItemStack ammo, ProjectileHitEvent event, Location hitLocation) {
         Material material = ammo.getType();
-
         switch (material) {
-            case TNT:
-                hitLocation.getWorld().createExplosion(hitLocation, 3.0f, false, false);
-                break;
-
             case LAVA_BUCKET:
                 hitLocation.getWorld().setBlockData(hitLocation, Material.LAVA.createBlockData());
                 hitLocation.getWorld().playSound(hitLocation, Sound.BLOCK_LAVA_POP, 1.0f, 1.0f);
@@ -371,33 +378,36 @@ public class Multishotcrossbow implements Weapon {
                 hitLocation.getWorld().playSound(hitLocation, Sound.BLOCK_WATER_AMBIENT, 1.0f, 1.0f);
                 hitLocation.getWorld().dropItemNaturally(hitLocation, ItemStack.of(Material.BUCKET));
                 break;
-
-            case EGG:
-                for (int i = 0; i < 4; i++) {
-                    hitLocation.getWorld().spawn(hitLocation, Chicken.class);
-                }
-                break;
-
-            case SNOWBALL:
-                // 雪球击中产生雪片
-                hitLocation.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, hitLocation, 20, 0.5, 0.5, 0.5, 0.1);
-                break;
-
-            case FIRE_CHARGE:
-                // 火球点燃地面
-                hitLocation.getWorld().playSound(hitLocation, Sound.ITEM_FIRECHARGE_USE, 1.0f, 1.0f);
-                hitLocation.getWorld().spawnParticle(Particle.FLAME, hitLocation, 15, 0.3, 0.3, 0.3, 0.05);
-                hitLocation.getWorld().setBlockData(hitLocation, Material.FIRE.createBlockData());
-                break;
-
-            case POTION:
-                // 药水效果
-                hitLocation.getWorld().spawnParticle(Particle.SPLASH, hitLocation, 50, 1.0, 1.0, 1.0, 0.5);
-                if (event.getHitEntity() instanceof LivingEntity) {
-                    LivingEntity entity = (LivingEntity) event.getHitEntity();
-                    entity.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 100, 1));
-                }
-                break;
+//            case TNT:
+//                hitLocation.getWorld().createExplosion(hitLocation, 3.0f, false, false);
+//                break;
+//
+//            case EGG:
+//                for (int i = 0; i < 4; i++) {
+//                    hitLocation.getWorld().spawn(hitLocation, Chicken.class);
+//                }
+//                break;
+//
+//            case SNOWBALL:
+//                // 雪球击中产生雪片
+//                hitLocation.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, hitLocation, 20, 0.5, 0.5, 0.5, 0.1);
+//                break;
+//
+//            case FIRE_CHARGE:
+//                // 火球点燃地面
+//                hitLocation.getWorld().playSound(hitLocation, Sound.ITEM_FIRECHARGE_USE, 1.0f, 1.0f);
+//                hitLocation.getWorld().spawnParticle(Particle.FLAME, hitLocation, 15, 0.3, 0.3, 0.3, 0.05);
+//                hitLocation.getWorld().setBlockData(hitLocation, Material.FIRE.createBlockData());
+//                break;
+//
+//            case POTION:
+//                // 药水效果
+//                hitLocation.getWorld().spawnParticle(Particle.SPLASH, hitLocation, 50, 1.0, 1.0, 1.0, 0.5);
+//                if (event.getHitEntity() instanceof LivingEntity) {
+//                    LivingEntity entity = (LivingEntity) event.getHitEntity();
+//                    entity.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 100, 1));
+//                }
+//                break;
 
             case COOKED_BEEF:
             case BREAD:
@@ -433,50 +443,46 @@ public class Multishotcrossbow implements Weapon {
                 }
                 break;
 
-            case ARROW:
-                // 箭造成额外伤害
-                if (event.getHitEntity() instanceof LivingEntity) {
-                    LivingEntity entity = (LivingEntity) event.getHitEntity();
-                    entity.damage(4.0);
-                }
-                break;
-
-            case ENDER_PEARL:
-                // 末影珍珠传送
-//                if (snowball.getShooter() instanceof Player) {
-//                    Player shooter = (Player) snowball.getShooter();
-//                    shooter.teleport(hitLocation);
-//                    shooter.playSound(hitLocation, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+//            case ARROW:
+//                // 箭造成额外伤害
+//                if (event.getHitEntity() instanceof LivingEntity) {
+//                    LivingEntity entity = (LivingEntity) event.getHitEntity();
+//                    entity.damage(4.0);
 //                }
-                break;
+//                break;
+//
+//            case ENDER_PEARL:
+//                // 末影珍珠传送
+////                if (snowball.getShooter() instanceof Player) {
+////                    Player shooter = (Player) snowball.getShooter();
+////                    shooter.teleport(hitLocation);
+////                    shooter.playSound(hitLocation, Sound.ENTITY_ENDERMAN_TELEPORT, 1.0f, 1.0f);
+////                }
+//                break;
 
 
             default:
+                hitLocation.getWorld().dropItemNaturally(hitLocation, ammo);
                 // 对于普通物品，只是掉落该物品
-                if (material.isBlock()) {
-                    // 如果是方块，尝试放置
-                    Location placeLocation = hitLocation.clone();
-                    if (event.getHitBlockFace() != null) {
-                        placeLocation = event.getHitBlock().getRelative(event.getHitBlockFace()).getLocation();
-                    }
-
-                    if (placeLocation.getBlock().getType() == Material.AIR) {
-                        placeLocation.getBlock().setType(material);
-                        hitLocation.getWorld().playSound(hitLocation, Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
-                    } else {
-                        // 如果不能放置，则掉落
-                        hitLocation.getWorld().dropItemNaturally(hitLocation, ammo);
-                    }
-                } else {
-                    // 非方块物品直接掉落
-                    hitLocation.getWorld().dropItemNaturally(hitLocation, ammo);
-                }
+//                if (material.isBlock()) {
+//                    // 如果是方块，尝试放置
+//                    Location placeLocation = hitLocation.clone();
+//                    if (event.getHitBlockFace() != null) {
+//                        placeLocation = event.getHitBlock().getRelative(event.getHitBlockFace()).getLocation();
+//                    }
+//
+//                    if (placeLocation.getBlock().getType() == Material.AIR) {
+//                        placeLocation.getBlock().setType(material);
+//                        hitLocation.getWorld().playSound(hitLocation, Sound.BLOCK_STONE_PLACE, 1.0f, 1.0f);
+//                    } else {
+//                        // 如果不能放置，则掉落
+//                        hitLocation.getWorld().dropItemNaturally(hitLocation, ammo);
+//                    }
+//                } else {
+//                    // 非方块物品直接掉落
+//                }
                 break;
         }
     }
-
-
-
-
 
 }

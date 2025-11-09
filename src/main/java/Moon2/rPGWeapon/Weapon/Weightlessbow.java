@@ -1,4 +1,4 @@
-package Moon2.rPGWeapon;
+package Moon2.rPGWeapon.Weapon;
 
 import org.bukkit.*;
 import org.bukkit.command.Command;

@@ -1,4 +1,4 @@
-package Moon2.rPGWeapon;
+package Moon2.rPGWeapon.Weapon;
 
 import org.bukkit.*;
 import org.bukkit.block.Block;
@@ -18,6 +18,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 import java.util.*;
+
 import static Moon2.rPGWeapon.Main.plugin;
 
 public class Stormwand implements Weapon {

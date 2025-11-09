@@ -1,23 +1,27 @@
-package Moon2.rPGWeapon;
+package Moon2.rPGWeapon.Weapon;
 
 import org.bukkit.*;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.*;
+import org.bukkit.entity.Chicken;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.entity.Snowball;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.ProjectileHitEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.util.Vector;
-import java.util.Arrays;
-import static Moon2.rPGWeapon.Main.plugin;
 
+import java.util.Arrays;
+
+import static Moon2.rPGWeapon.Main.plugin;
 import static org.bukkit.Bukkit.getServer;
 public class Specialcrossbow implements Weapon {
 
@@ -70,7 +74,7 @@ public class Specialcrossbow implements Weapon {
 
         ItemMeta meta = item.getItemMeta();
         if (meta == null) return false;
-
+        System.out.println(meta.getPersistentDataContainer().getKeys().stream().map(NamespacedKey::toString).toList());
         return meta.getPersistentDataContainer().has(specialKey, PersistentDataType.BYTE);
     }
 

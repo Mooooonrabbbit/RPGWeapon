@@ -1,5 +1,6 @@
 package Moon2.rPGWeapon;
 
+import Moon2.rPGWeapon.Weapon.*;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ public class Main extends JavaPlugin {
         weapons.add(new Minerhelmet());
         weapons.add(new Stormwand());
         weapons.add(new Multishotcrossbow());
-        weapons.add(new Specialcrossbow());
+//        weapons.add(new Specialcrossbow());
         weapons.forEach(Weapon::onEnable);
         getLogger().info("插件已启用!");
     }

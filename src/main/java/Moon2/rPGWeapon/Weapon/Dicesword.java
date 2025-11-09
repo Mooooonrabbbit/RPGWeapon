@@ -1,4 +1,4 @@
-package Moon2.rPGWeapon;
+package Moon2.rPGWeapon.Weapon;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;

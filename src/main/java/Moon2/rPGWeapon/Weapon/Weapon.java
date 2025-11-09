@@ -1,4 +1,4 @@
-package Moon2.rPGWeapon;
+package Moon2.rPGWeapon.Weapon;
 
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.event.Listener;
